@@ -10,19 +10,69 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const userAlreadyExists = users.find((user) => user.username === username);
+
+  if (!userAlreadyExists) {
+    return response.status(404).json({ error: "User not exists!" });
+  }
+
+  request.user = userAlreadyExists;
+  next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  const userSizeTodos = user.todos.length;
+  const userIsPro = user && user.pro;
+
+  if ((!userIsPro && userSizeTodos < 10) || userIsPro) {
+    return next();
+  }
+  
+  return response.status(403).json({ error: "Not possible create todo!" });
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const userAlreadyExists = users.find((user) => user.username === username);
+  const idIsValid = validate(id);
+  const todoAlreadyExists = userAlreadyExists && userAlreadyExists.todos.find((todo) => todo.id === id);
+
+  if (!userAlreadyExists) {
+    return response.status(404).json({ error: "User not exists!" });
+  }
+
+  if (!idIsValid) {
+    return response.status(400).json({ error: "ID is not valid!" });
+  }
+
+  if (!todoAlreadyExists) {
+    return response.status(404).json({ error: "Todo not exists!" });
+  }
+
+  request.user = userAlreadyExists;
+  request.todo = todoAlreadyExists;
+
+  next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const userAlreadyExists = users.find((user) => user.id === id);
+
+  if (!userAlreadyExists) {
+    return response.status(404).json({ error: "User not exists!" });
+  }
+
+  request.user = userAlreadyExists;
+
+  next();
 }
 
 app.post('/users', (request, response) => {
